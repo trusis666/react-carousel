@@ -3,9 +3,8 @@ import Pagination from './Pagination';
 
 function Carousel(props) {
 
-    const slides = props.data;
     const componentRef = useRef();
-    const [active, setActive] = useState(null);
+    const [slides, setSlides] = useState([]);
     const [activeId, setActiveId] = useState(0);
     const [x, setX] = useState(0);
     const [touchStart, setTouchStart] = useState(0);
@@ -14,11 +13,19 @@ function Carousel(props) {
     const [dragging, setDragging] = useState(false);
 
     useEffect(() => {
-        setActive(slides[0]);
-        if(props.autoPlay) {
-            autoPlay();
+        
+        if(componentRef.current) {
+            setSlides(componentRef.current.children);
         }
-    }, []);
+    }, [componentRef.current]);
+
+    useEffect(() => {
+        if(props.autoPlay) {
+            if(slides.length !== 0) {
+                autoPlay();
+            }
+        }
+    }, [slides]);
 
     useEffect(() => {
         if(activeId == slides.length) {
@@ -31,7 +38,7 @@ function Carousel(props) {
 
     const handleTouchStart = (event) => {
         setTouchStart(event.touches[0].clientX);
-        setWidth(componentRef.current.offsetWidth);
+        setWidth(componentRef.current.offsetWidth / slides.length);
     };
 
     const handleTouchMove = (event) => {
@@ -56,7 +63,7 @@ function Carousel(props) {
     const handleMouseDown = (event) => {
         setDragging(true);
         setTouchStart(event.clientX);
-        setWidth(componentRef.current.offsetWidth);
+        setWidth(componentRef.current.offsetWidth / slides.length);
     };
 
     const handleMouseMove = (event) => {
@@ -101,14 +108,14 @@ function Carousel(props) {
     };
 
     const goToNext = () => {
-        setWidth(componentRef.current.offsetWidth);
+        setWidth(componentRef.current.offsetWidth / slides.length);
         setActiveId(activeId => activeId + 1);
         setX(activeId * width);
     };
 
     const goToPrevious = () => {
         if(activeId !== 0) {
-            setWidth(componentRef.current.offsetWidth);
+            setWidth(componentRef.current.offsetWidth / slides.length);
             setActiveId(activeId => activeId - 1);
             setX(activeId * width);
         }
@@ -116,48 +123,27 @@ function Carousel(props) {
 
     const autoPlay = () => {
         setTimeout(() => {
-            setWidth(componentRef.current.offsetWidth);
+            setWidth(componentRef.current.offsetWidth / slides.length);
             setActiveId(activeId => activeId + 1);
             setX(activeId * width);
             autoPlay();
         }, 3000);
     };
 
-    if(active === null) {
-        return (
-            <div>Loading</div>
-        )
-    }
-
     return (
         <div className="carousel-container">
-            <div style={{ transform: "translateX(-" + x + "px)", display: "flex", transition: 'transform 0.6s' }}>
-            {slides.map( (slide, index) => {
-
-                let className = 'slide-item';
-                if (activeId === slide.id-1) {
-                    className += ' active';
-                }
-
-                return (
-                    <div
-                        ref={componentRef}
-                        key={slide.id}
-                        className={className}
-                        onTouchStart={touchStartEvent => handleTouchStart(touchStartEvent)}
-                        onTouchMove={touchMoveEvent => handleTouchMove(touchMoveEvent)}
-                        onTouchEnd={() => handleTouchEnd()}
-                        onMouseDown={mouseDownEvent => handleMouseDown(mouseDownEvent)}
-                        onMouseMove={mouseMoveEvent => handleMouseMove(mouseMoveEvent)}
-                        onMouseUp={() => handleMouseUp()}
-                        onMouseLeave={() => handleMouseLeave()}
-                        style={{ backgroundColor: slide.bgColor }}
-                    >
-                        <h2>{slide.title}</h2>
-                        <p>{slide.description}</p>
-                    </div>
-                )
-            })}
+            <div 
+                ref={componentRef}
+                onTouchStart={touchStartEvent => handleTouchStart(touchStartEvent)}
+                onTouchMove={touchMoveEvent => handleTouchMove(touchMoveEvent)}
+                onTouchEnd={() => handleTouchEnd()}
+                onMouseDown={mouseDownEvent => handleMouseDown(mouseDownEvent)}
+                onMouseMove={mouseMoveEvent => handleMouseMove(mouseMoveEvent)}
+                onMouseUp={() => handleMouseUp()}
+                onMouseLeave={() => handleMouseLeave()}
+                style={{ transform: "translateX(-" + x + "px)", display: "flex", transition: 'transform 0.6s' }}
+            >
+                {props.children}
             </div>
             {props.showArrows &&
                 <div className="arrow-nav">

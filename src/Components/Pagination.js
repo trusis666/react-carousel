@@ -2,35 +2,27 @@ import React, { useEffect, useState } from 'react';
 
 function Pagination(props) {
 
-    const slides = props.data;
-    const [active, setActive] = useState(null);
+    const [active, setActive] = useState(0);
+    const [slides, setSlides] = useState(null);
 
     useEffect(() => {
-        setActive(slides[0]);
-    });
+        setSlides(props.data);
+    }, [props.data]);
 
     const onPress = slide => {
-        console.log(slide);
         setActive(slide.id);
     };
 
-    if(active === null) {
-        return (
-            <div>Loading</div>
-        )
-    }
-
     return (
         <div className="pagination">
-            {slides.map( slide => {
-
+            {slides !== null && Object.keys(slides).map( (slide, index) => {
                 let className = 'pagination-item';
-                if (props.active === slide.id-1) {
+                if (props.active === index) {
                     className += ' active-pagination';
                 }
 
                 return (
-                    <div key={slide.id} className={className} onClick={() => onPress(slide)}>
+                    <div key={index} className={className} onClick={() => onPress(slide)}>
                     </div>
                 )
             })}
